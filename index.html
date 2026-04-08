@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ग्रामीण उद्यम मंच | Gramin Udyam Manch</title>
+<link href="https://fonts.googleapis.com/css2?family=Tiro+Devanagari+Hindi:ital@0;1&family=Baloo+2:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root {
+  --saffron:#FF6B00;--saffron-light:#FF8C38;--saffron-pale:#FFF3E8;
+  --green:#138808;--green-light:#1aad09;--green-pale:#E8F5E9;
+  --navy:#0D1B3E;--gold:#F5A623;--cream:#FDFAF4;
+  --text:#1a1a2e;--muted:#6b7280;--border:#e5e7eb;
+  --white:#ffffff;--shadow:0 4px 24px rgba(13,27,62,0.10);--radius:16px;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--text);min-height:100vh;}
+
+/* ---- SETUP BANNER ---- */
+#setup-banner{
+  background:#1a0030;color:white;padding:16px 24px;
+  display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;
+}
+#setup-banner.hidden{display:none;}
+.setup-text{font-size:14px;line-height:1.6;}
+.setup-text strong{color:var(--gold);}
+.setup-text code{background:rgba(255,255,255,0.15);padding:2px 8px;border-radius:4px;font-size:13px;font-family:monospace;}
+.btn-setup{padding:10px 20px;border-radius:8px;background:var(--saffron);color:white;border:none;font-weight:700;cursor:pointer;font-size:14px;white-space:nowrap;}
+
+/* ---- NAV ---- */
+nav{background:var(--navy);padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:64px;position:sticky;top:0;z-index:100;box-shadow:0 2px 20px rgba(0,0,0,0.3);}
+.nav-logo{font-family:'Baloo 2',cursive;font-size:22px;font-weight:800;color:var(--white);display:flex;align-items:center;gap:10px;}
+.nav-logo span{color:var(--saffron);}
+.nav-flag{display:flex;flex-direction:column;width:28px;height:20px;border-radius:3px;overflow:hidden;}
+.flag-s{height:33.33%;}
+.flag-s:nth-child(1){background:#FF9933;}
+.flag-s:nth-child(2){background:white;display:flex;align-items:center;justify-content:center;font-size:7px;color:#000080;}
+.flag-s:nth-child(3){background:#138808;}
+.nav-tabs{display:flex;gap:4px;}
+.nav-tab{padding:8px 16px;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;color:rgba(255,255,255,0.7);border:none;background:transparent;transition:all .2s;}
+.nav-tab:hover,.nav-tab.active{background:rgba(255,255,255,0.12);color:white;}
+.nav-tab.active{color:var(--saffron);}
+.btn-admin{padding:8px 18px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;background:rgba(255,107,0,0.2);color:var(--saffron);border:1px solid rgba(255,107,0,0.4);transition:all .2s;}
+.btn-admin:hover{background:rgba(255,107,0,0.35);}
+
+/* ---- PAGES ---- */
+.page{display:none;}
+.page.active{display:block;}
+
+/* ---- LOADER ---- */
+.loader-wrap{display:flex;justify-content:center;padding:60px 24px;}
+.loader{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--saffron);border-radius:50%;animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* ---- HERO ---- */
+.hero{background:linear-gradient(135deg,var(--navy) 0%,#1a2f6e 50%,#0d1b3e 100%);padding:80px 24px 60px;text-align:center;position:relative;overflow:hidden;}
+.hero::before{content:'';position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/svg%3E");pointer-events:none;}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(255,107,0,0.15);border:1px solid rgba(255,107,0,0.3);padding:6px 16px;border-radius:100px;font-size:13px;font-weight:500;color:var(--saffron);margin-bottom:24px;}
+.hero h1{font-family:'Baloo 2',cursive;font-size:clamp(32px,5vw,56px);font-weight:800;color:white;line-height:1.15;margin-bottom:8px;}
+.hero h1 span{color:var(--saffron);}
+.hero-hindi{font-family:'Tiro Devanagari Hindi',serif;font-size:clamp(18px,3vw,26px);color:rgba(255,255,255,0.7);margin-bottom:20px;}
+.hero p{font-size:17px;color:rgba(255,255,255,0.6);max-width:560px;margin:0 auto 36px;line-height:1.7;}
+.hero-ctas{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;}
+.btn-primary{padding:14px 32px;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer;background:var(--saffron);color:white;border:none;transition:all .2s;box-shadow:0 4px 20px rgba(255,107,0,0.4);}
+.btn-primary:hover{background:var(--saffron-light);transform:translateY(-2px);}
+.btn-secondary{padding:14px 32px;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer;background:transparent;color:white;border:2px solid rgba(255,255,255,0.3);transition:all .2s;}
+.btn-secondary:hover{border-color:white;background:rgba(255,255,255,0.08);transform:translateY(-2px);}
+.hero-stats{display:flex;justify-content:center;gap:48px;margin-top:56px;flex-wrap:wrap;}
+.stat{text-align:center;}
+.stat-num{font-family:'Baloo 2',cursive;font-size:32px;font-weight:800;color:var(--saffron);}
+.stat-label{font-size:13px;color:rgba(255,255,255,0.5);margin-top:2px;}
+
+/* ---- HOW IT WORKS ---- */
+.how-section{padding:64px 24px;max-width:1100px;margin:0 auto;}
+.section-title{text-align:center;font-family:'Baloo 2',cursive;font-size:32px;font-weight:800;color:var(--navy);margin-bottom:8px;}
+.section-sub{text-align:center;font-family:'Tiro Devanagari Hindi',serif;font-size:18px;color:var(--muted);margin-bottom:48px;}
+.steps-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:24px;}
+.step-card{background:white;border-radius:var(--radius);padding:28px 24px;text-align:center;border:1px solid var(--border);transition:all .3s;position:relative;overflow:hidden;}
+.step-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:var(--saffron);}
+.step-card.green::before{background:var(--green);}
+.step-card:hover{transform:translateY(-4px);box-shadow:var(--shadow);}
+.step-icon{width:56px;height:56px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 16px;background:var(--saffron-pale);}
+.step-card.green .step-icon{background:var(--green-pale);}
+.step-num{position:absolute;top:16px;right:16px;width:28px;height:28px;border-radius:50%;background:var(--saffron-pale);color:var(--saffron);font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;}
+.step-card.green .step-num{background:var(--green-pale);color:var(--green);}
+.step-card h3{font-size:16px;font-weight:700;margin-bottom:8px;}
+.step-card p{font-size:14px;color:var(--muted);line-height:1.6;}
+.fee-badge{display:inline-block;margin-top:12px;padding:4px 12px;border-radius:100px;font-size:12px;font-weight:700;background:var(--saffron-pale);color:var(--saffron);}
+.step-card.green .fee-badge{background:var(--green-pale);color:var(--green);}
+
+/* ---- LISTING ---- */
+.listing-section{padding:48px 24px;max-width:1100px;margin:0 auto;}
+.filter-bar{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:32px;align-items:center;}
+.filter-bar input,.filter-bar select{padding:10px 16px;border-radius:10px;border:1.5px solid var(--border);font-size:14px;background:white;color:var(--text);outline:none;transition:border .2s;font-family:'DM Sans',sans-serif;}
+.filter-bar input{flex:1;min-width:200px;}
+.filter-bar input:focus,.filter-bar select:focus{border-color:var(--saffron);}
+.filter-bar select{min-width:160px;}
+.startups-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:24px;}
+.startup-card{background:white;border-radius:var(--radius);border:1px solid var(--border);overflow:hidden;transition:all .3s;}
+.startup-card:hover{transform:translateY(-4px);box-shadow:0 12px 40px rgba(13,27,62,0.12);border-color:var(--saffron);}
+.card-header{padding:20px 20px 0;display:flex;justify-content:space-between;align-items:flex-start;}
+.startup-avatar{width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0;}
+.category-tag{display:inline-block;padding:3px 10px;border-radius:100px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;}
+.tag-agri{background:var(--green-pale);color:var(--green);}
+.tag-food{background:#FFF3E0;color:#E65100;}
+.tag-craft{background:#F3E5F5;color:#6A1B9A;}
+.tag-tech{background:#E3F2FD;color:#1565C0;}
+.tag-health{background:#FCE4EC;color:#AD1457;}
+.tag-edu{background:#E8F5E9;color:#2E7D32;}
+.card-body{padding:16px 20px;}
+.startup-name{font-family:'Baloo 2',cursive;font-size:18px;font-weight:700;margin-bottom:4px;}
+.startup-hindi{font-family:'Tiro Devanagari Hindi',serif;font-size:14px;color:var(--muted);margin-bottom:10px;}
+.startup-desc{font-size:14px;color:var(--muted);line-height:1.6;margin-bottom:14px;}
+.card-info{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:16px;}
+.info-chip{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--muted);}
+.funding-bar{margin-bottom:16px;}
+.funding-label{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:6px;}
+.funding-label strong{color:var(--saffron);font-weight:700;}
+.bar-track{height:6px;background:var(--border);border-radius:100px;overflow:hidden;}
+.bar-fill{height:100%;background:linear-gradient(90deg,var(--saffron),var(--gold));border-radius:100px;}
+.card-footer{padding:14px 20px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
+.founder-info{display:flex;align-items:center;gap:10px;}
+.founder-avatar{width:32px;height:32px;border-radius:50%;background:var(--navy);color:white;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;}
+.founder-name{font-size:13px;font-weight:600;}
+.founder-loc{font-size:11px;color:var(--muted);}
+.btn-contact{padding:8px 18px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;background:var(--navy);color:white;border:none;transition:all .2s;}
+.btn-contact:hover{background:var(--saffron);}
+.empty-state{grid-column:1/-1;text-align:center;padding:60px 24px;color:var(--muted);}
+.empty-state .big{font-size:48px;margin-bottom:12px;}
+
+/* ---- FORM ---- */
+.form-section{padding:48px 24px;max-width:720px;margin:0 auto;}
+.form-card{background:white;border-radius:20px;border:1px solid var(--border);padding:40px;box-shadow:var(--shadow);}
+.form-title{font-family:'Baloo 2',cursive;font-size:28px;font-weight:800;margin-bottom:6px;color:var(--navy);}
+.form-subtitle{font-family:'Tiro Devanagari Hindi',serif;font-size:16px;color:var(--muted);margin-bottom:32px;}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+.form-group{display:flex;flex-direction:column;gap:6px;}
+.form-group.full{grid-column:1/-1;}
+.form-group label{font-size:13px;font-weight:600;color:var(--navy);}
+.form-group label span{color:var(--muted);font-weight:400;font-size:12px;}
+.form-group input,.form-group select,.form-group textarea{padding:12px 16px;border-radius:10px;border:1.5px solid var(--border);font-size:14px;background:var(--cream);color:var(--text);outline:none;transition:border .2s;font-family:'DM Sans',sans-serif;}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--saffron);background:white;}
+.form-group textarea{resize:vertical;min-height:100px;}
+.fee-notice{background:var(--saffron-pale);border:1px solid rgba(255,107,0,0.2);border-radius:12px;padding:16px 20px;display:flex;align-items:flex-start;gap:12px;margin:24px 0;}
+.fee-notice .icon{font-size:22px;flex-shrink:0;}
+.fee-notice h4{font-size:15px;font-weight:700;color:var(--saffron);margin-bottom:4px;}
+.fee-notice p{font-size:13px;color:var(--muted);line-height:1.5;}
+.btn-submit{width:100%;padding:16px;border-radius:12px;font-size:17px;font-weight:800;cursor:pointer;background:var(--saffron);color:white;border:none;transition:all .2s;box-shadow:0 4px 20px rgba(255,107,0,0.3);font-family:'Baloo 2',cursive;}
+.btn-submit:hover{background:var(--saffron-light);transform:translateY(-2px);}
+.btn-submit:disabled{opacity:.6;cursor:not-allowed;transform:none;}
+
+/* ---- ADMIN ---- */
+.admin-section{padding:32px 24px;max-width:1100px;margin:0 auto;}
+.admin-header{background:var(--navy);border-radius:var(--radius);padding:24px 28px;margin-bottom:28px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;}
+.admin-header h2{font-family:'Baloo 2',cursive;font-size:24px;font-weight:800;color:white;}
+.admin-header p{color:rgba(255,255,255,0.5);font-size:14px;}
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:28px;}
+.stat-card{background:white;border-radius:var(--radius);padding:20px 24px;border:1px solid var(--border);}
+.stat-card .label{font-size:13px;color:var(--muted);margin-bottom:8px;}
+.stat-card .value{font-family:'Baloo 2',cursive;font-size:30px;font-weight:800;color:var(--navy);}
+.stat-card .sub{font-size:12px;color:var(--green);font-weight:600;margin-top:4px;}
+.admin-table-wrap{background:white;border-radius:var(--radius);border:1px solid var(--border);overflow:hidden;}
+.table-header{padding:16px 24px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
+.table-header h3{font-size:17px;font-weight:700;}
+table{width:100%;border-collapse:collapse;}
+th{padding:12px 16px;text-align:left;font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;background:var(--cream);border-bottom:1px solid var(--border);}
+td{padding:14px 16px;font-size:14px;border-bottom:1px solid var(--border);vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:var(--cream);}
+.status-badge{display:inline-flex;padding:3px 10px;border-radius:100px;font-size:12px;font-weight:600;}
+.status-pending{background:#FFF3E0;color:#E65100;}
+.status-approved{background:var(--green-pale);color:var(--green);}
+.status-blocked{background:#FFEBEE;color:#C62828;}
+.toggle-btn{padding:6px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;border:none;transition:all .2s;margin:2px;}
+.toggle-approve{background:var(--green-pale);color:var(--green);}
+.toggle-approve:hover{background:var(--green);color:white;}
+.toggle-block{background:#FFEBEE;color:#C62828;}
+.toggle-block:hover{background:#C62828;color:white;}
+.toggle-pending{background:#FFF3E0;color:#E65100;}
+.toggle-pending:hover{background:#E65100;color:white;}
+
+/* ---- MODAL ---- */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(13,27,62,0.7);z-index:200;align-items:center;justify-content:center;padding:24px;}
+.modal-overlay.show{display:flex;}
+.modal{background:white;border-radius:20px;padding:36px;max-width:480px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.3);text-align:center;}
+.modal h3{font-family:'Baloo 2',cursive;font-size:24px;font-weight:800;margin-bottom:8px;color:var(--navy);}
+.modal p{font-size:15px;color:var(--muted);line-height:1.6;margin-bottom:16px;}
+.modal .amount{font-family:'Baloo 2',cursive;font-size:48px;font-weight:800;color:var(--saffron);margin:12px 0;}
+.modal .amount span{font-size:22px;}
+.modal-note{font-size:13px;color:var(--muted);background:var(--cream);padding:12px 16px;border-radius:10px;margin-bottom:24px;line-height:1.6;}
+.modal-btns{display:flex;gap:12px;}
+.btn-confirm{flex:1;padding:14px;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;background:var(--saffron);color:white;border:none;transition:all .2s;}
+.btn-confirm:hover{background:var(--saffron-light);}
+.btn-confirm:disabled{opacity:.6;cursor:not-allowed;}
+.btn-cancel{flex:1;padding:14px;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;background:var(--cream);color:var(--muted);border:1px solid var(--border);}
+
+/* ---- SETUP MODAL ---- */
+.setup-modal{max-width:560px;text-align:left;}
+.setup-modal h3{text-align:center;}
+.setup-field{display:flex;flex-direction:column;gap:6px;margin-bottom:16px;}
+.setup-field label{font-size:13px;font-weight:600;color:var(--navy);}
+.setup-field input{padding:12px 16px;border-radius:10px;border:1.5px solid var(--border);font-size:13px;font-family:monospace;outline:none;transition:border .2s;}
+.setup-field input:focus{border-color:var(--saffron);}
+.setup-steps{background:var(--cream);border-radius:12px;padding:16px;margin-bottom:20px;font-size:13px;line-height:2;color:var(--muted);}
+.setup-steps strong{color:var(--navy);}
+.setup-steps a{color:var(--saffron);}
+
+/* ---- TOAST ---- */
+.toast{display:none;position:fixed;bottom:24px;right:24px;padding:16px 24px;border-radius:14px;font-size:15px;font-weight:600;box-shadow:0 8px 32px rgba(0,0,0,0.2);z-index:999;animation:slideUp .3s ease;max-width:340px;}
+.toast.success{background:var(--green);color:white;}
+.toast.error{background:#C62828;color:white;}
+.toast.info{background:var(--navy);color:white;}
+@keyframes slideUp{from{transform:translateY(20px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+
+/* ---- FOOTER ---- */
+footer{background:var(--navy);color:rgba(255,255,255,0.5);text-align:center;padding:28px 24px;font-size:14px;margin-top:60px;}
+footer strong{color:var(--saffron);}
+
+/* ---- HAMBURGER ---- */
+.hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:8px;background:transparent;border:none;}
+.hamburger span{display:block;width:22px;height:2px;background:white;border-radius:2px;transition:all .3s;}
+.mobile-menu{display:none;position:fixed;top:64px;left:0;right:0;background:var(--navy);z-index:99;padding:8px 16px 16px;box-shadow:0 8px 20px rgba(0,0,0,0.3);}
+.mobile-menu.open{display:block;}
+.mobile-menu .nav-tab{display:block;width:100%;text-align:left;padding:12px 16px;border-radius:8px;font-size:15px;}
+
+/* ---- RESPONSIVE ---- */
+@media(max-width:600px){
+  .form-grid{grid-template-columns:1fr;}
+  .hero-stats{gap:28px;}
+  nav{padding:0 16px;}
+  .nav-tabs{display:none;}
+  .hamburger{display:flex;}
+  .form-card{padding:24px 20px;}
+  table{font-size:12px;}
+  th,td{padding:10px 10px;}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">
+    <div class="nav-flag">
+      <div class="flag-s"></div>
+      <div class="flag-s">⊙</div>
+      <div class="flag-s"></div>
+    </div>
+    Gramin <span>Udyam</span>
+  </div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showPage('home')">Home</button>
+    <button class="nav-tab" onclick="showPage('startups')">Startups</button>
+    <button class="nav-tab" onclick="showPage('submit')">Submit Idea</button>
+    <button class="nav-tab" onclick="showPage('invest')">Invest</button>
+  </div>
+  <button class="hamburger" id="hamburgerBtn" onclick="toggleMobileMenu()" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+<div class="mobile-menu" id="mobileMenu">
+  <button class="nav-tab" onclick="showPage('home');toggleMobileMenu()">&#127968; Home</button>
+  <button class="nav-tab" onclick="showPage('startups');toggleMobileMenu()">&#127807; Startups</button>
+  <button class="nav-tab" onclick="showPage('submit');toggleMobileMenu()">&#128640; Submit Idea</button>
+  <button class="nav-tab" onclick="showPage('invest');toggleMobileMenu()">&#128176; Invest</button>
+</div>
+
+<!-- HOME PAGE -->
+<div id="page-home" class="page active">
+  <div class="hero">
+    <div class="hero-badge">🌾 Rural India's Startup Platform</div>
+    <h1>India's <span>Villages</span><br/>Have Big Dreams</h1>
+    <div class="hero-hindi">गाँव का उद्यमी, देश का भविष्य</div>
+    <p>Connect rural entrepreneurs with investors. Post your startup idea and find the funding you deserve.</p>
+    <div class="hero-ctas">
+      <button class="btn-primary" onclick="showPage('submit')">🚀 Post Your Idea — ₹100</button>
+      <button class="btn-secondary" onclick="showPage('startups')">💰 Browse Startups</button>
+    </div>
+    <div class="hero-stats">
+      <div class="stat"><div class="stat-num" id="stat-startups">—</div><div class="stat-label">Startups Live</div></div>
+      <div class="stat"><div class="stat-num" id="stat-contacts">—</div><div class="stat-label">Investor Requests</div></div>
+
+    </div>
+  </div>
+  <div class="how-section">
+    <div class="section-title">How It Works</div>
+    <div class="section-sub">यह कैसे काम करता है</div>
+    <div class="steps-grid">
+      <div class="step-card">
+        <div class="step-num">1</div>
+        <div class="step-icon">📝</div>
+        <h3>Post Your Startup</h3>
+        <p>Fill in your idea, funding need, and village details in Hindi or English.</p>
+        <div class="fee-badge">₹100 Platform Fee</div>
+      </div>
+      <div class="step-card">
+        <div class="step-num">2</div>
+        <div class="step-icon">✅</div>
+        <h3>Admin Approval</h3>
+        <p>Our team reviews your submission and activates your listing within 24 hours.</p>
+        <div class="fee-badge">Free Review</div>
+      </div>
+      <div class="step-card green">
+        <div class="step-num">3</div>
+        <div class="step-icon">👀</div>
+        <h3>Investors Browse</h3>
+        <p>Verified investors from across India discover your startup idea.</p>
+        <div class="fee-badge">₹100 to Contact</div>
+      </div>
+      <div class="step-card green">
+        <div class="step-num">4</div>
+        <div class="step-icon">🤝</div>
+        <h3>Connect & Grow</h3>
+        <p>Investor pays ₹100 to unlock your contact. You both connect directly.</p>
+        <div class="fee-badge">Direct Connect</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- STARTUPS PAGE -->
+<div id="page-startups" class="page">
+  <div class="listing-section">
+    <div class="section-title">Active Startups</div>
+    <div class="section-sub">निवेश के लिए उपलब्ध स्टार्टअप</div>
+    <div class="filter-bar">
+      <input type="text" placeholder="🔍 Search startups..." id="searchInput" oninput="filterCards('startups-grid')"/>
+      <select id="stateFilter" onchange="filterCards('startups-grid')">
+        <option value="">All States</option>
+        <option>Rajasthan</option><option>Uttar Pradesh</option><option>Bihar</option>
+        <option>Madhya Pradesh</option><option>Maharashtra</option><option>Gujarat</option>
+        <option>Punjab</option><option>Haryana</option>
+      </select>
+      <select id="catFilter" onchange="filterCards('startups-grid')">
+        <option value="">All Categories</option>
+        <option>Agriculture</option><option>Food</option><option>Handicraft</option>
+        <option>Technology</option><option>Health</option><option>Education</option>
+      </select>
+    </div>
+    <div class="startups-grid" id="startups-grid"><div class="loader-wrap"><div class="loader"></div></div></div>
+  </div>
+</div>
+
+<!-- SUBMIT PAGE -->
+<div id="page-submit" class="page">
+  <div class="form-section">
+    <div class="form-card">
+      <div class="form-title">🚀 Submit Your Startup Idea</div>
+      <div class="form-subtitle">अपना स्टार्टअप आइडिया यहाँ दर्ज करें</div>
+      <div class="form-grid">
+        <div class="form-group"><label>Startup Name <span>(नाम)*</span></label><input type="text" id="f-name" placeholder="e.g. Kisan Dairy Farm"/></div>
+        <div class="form-group"><label>Name in Hindi <span>(हिंदी नाम)</span></label><input type="text" id="f-hindi" placeholder="e.g. किसान डेयरी फार्म"/></div>
+        <div class="form-group full"><label>Describe Your Idea <span>(विवरण)*</span></label><textarea id="f-desc" placeholder="Tell investors about your idea, what problem it solves, and how you will use the funding..."></textarea></div>
+        <div class="form-group"><label>Category <span>(श्रेणी)</span></label>
+          <select id="f-cat"><option>Agriculture</option><option>Food</option><option>Handicraft</option><option>Technology</option><option>Health</option><option>Education</option></select>
+        </div>
+        <div class="form-group"><label>Funding Needed <span>(राशि)*</span></label><input type="text" id="f-fund" placeholder="e.g. ₹2,00,000"/></div>
+        <div class="form-group"><label>Your Full Name <span>(आपका नाम)*</span></label><input type="text" id="f-founder" placeholder="Full name"/></div>
+        <div class="form-group"><label>Phone / WhatsApp <span>(फोन)*</span></label><input type="tel" id="f-phone" placeholder="10 digit mobile number"/></div>
+        <div class="form-group"><label>Village / Town <span>(गाँव)*</span></label><input type="text" id="f-village" placeholder="Your village or town name"/></div>
+        <div class="form-group"><label>State <span>(राज्य)</span></label>
+          <select id="f-state"><option>Rajasthan</option><option>Uttar Pradesh</option><option>Bihar</option><option>Madhya Pradesh</option><option>Maharashtra</option><option>Gujarat</option><option>Punjab</option><option>Haryana</option><option>Other</option></select>
+        </div>
+      </div>
+      <div class="fee-notice">
+        <div class="icon">💳</div>
+        <div>
+          <h4>Platform Fee: ₹100</h4>
+          <p>After submitting, our admin will review your listing. You will be contacted on your phone to pay ₹100 via UPI/PhonePe. Only then your listing goes live for investors to see.</p>
+        </div>
+      </div>
+      <button class="btn-submit" id="submitBtn" onclick="submitStartup()">Submit My Startup Idea →</button>
+    </div>
+  </div>
+</div>
+
+<!-- INVEST PAGE -->
+<div id="page-invest" class="page">
+  <div class="listing-section">
+    <div class="section-title">💰 Invest in Rural India</div>
+    <div class="section-sub">ग्रामीण भारत में निवेश करें</div>
+    <div style="background:white;border-radius:var(--radius);border:1px solid var(--border);padding:28px;margin-bottom:32px;display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap;">
+      <div style="flex:1;min-width:200px;">
+        <h3 style="font-family:'Baloo 2',cursive;font-size:20px;font-weight:800;margin-bottom:8px;color:var(--navy);">How Investing Works</h3>
+        <p style="font-size:14px;color:var(--muted);line-height:1.7;">Browse startups below. Click <strong>Contact Founder</strong> on any startup. Our admin will verify your interest and call you to complete ₹100 payment via UPI. After payment, founder's direct WhatsApp/phone number is shared with you.</p>
+      </div>
+      <div style="background:var(--green-pale);border-radius:12px;padding:20px 24px;text-align:center;min-width:140px;">
+        <div style="font-family:'Baloo 2',cursive;font-size:40px;font-weight:800;color:var(--green);">₹100</div>
+        <div style="font-size:13px;color:var(--muted);">One-time contact fee</div>
+        <div style="font-size:12px;color:var(--green);font-weight:600;margin-top:4px;">Per startup contact</div>
+      </div>
+    </div>
+    <div class="startups-grid" id="invest-grid"><div class="loader-wrap"><div class="loader"></div></div></div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <strong>ग्रामीण उद्यम मंच</strong> — Connecting Rural India with Investors<br/>
+  <span style="font-size:12px;">© 2026 ग्रामीण उद्यम मंच. All rights reserved.</span>
+</footer>
+
+<!-- CONTACT MODAL -->
+<div class="modal-overlay" id="contactModal">
+  <div class="modal">
+    <div style="font-size:48px;margin-bottom:8px;">🔒</div>
+    <h3>Unlock Founder Contact</h3>
+    <p>Enter your details below. Our admin will call you within 24 hours to complete ₹100 payment and share the founder's WhatsApp number.</p>
+    <div class="amount"><span>₹</span>100</div>
+    <div class="form-group" style="text-align:left;margin-bottom:12px;"><label style="font-size:13px;font-weight:600;color:var(--navy);">Your Name</label><input type="text" id="inv-name" placeholder="Your full name" style="margin-top:6px;width:100%;padding:10px 14px;border-radius:8px;border:1.5px solid var(--border);font-size:14px;outline:none;"/></div>
+    <div class="form-group" style="text-align:left;margin-bottom:16px;"><label style="font-size:13px;font-weight:600;color:var(--navy);">Your Phone Number</label><input type="tel" id="inv-phone" placeholder="10 digit mobile number" style="margin-top:6px;width:100%;padding:10px 14px;border-radius:8px;border:1.5px solid var(--border);font-size:14px;outline:none;"/></div>
+    <div class="modal-note">✅ Admin will call you on this number within 24 hours. Payment via UPI/PhonePe. After payment, founder's direct contact is shared instantly.</div>
+    <div class="modal-btns">
+      <button class="btn-confirm" id="confirmBtn" onclick="confirmContact()">📞 Send Request</button>
+      <button class="btn-cancel" onclick="closeModal('contactModal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ===================== SUPABASE SETUP =====================
+const SUPABASE_URL = 'https://kqdtbxizltwbbwxeoals.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtxZHRieGl6bHR3YmJ3eGVvYWxzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4MDAyNTAsImV4cCI6MjA5MDM3NjI1MH0.b8D6RMwtBbkJ2-Vb9xQIw-B3QJdLXQOLt3Ud9j-7Xj0';
+let db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+let currentContactStartup = null;
+
+// ===================== HELPERS =====================
+const tagClass = cat => ({'Agriculture':'tag-agri','Food':'tag-food','Handicraft':'tag-craft','Technology':'tag-tech','Health':'tag-health','Education':'tag-edu'}[cat]||'tag-agri');
+const emojis = {'Agriculture':'🌾','Food':'🥛','Handicraft':'🎨','Technology':'💻','Health':'🌿','Education':'📚'};
+const initials = name => name.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase();
+
+function showToast(msg, type='success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'toast ' + type;
+  t.style.display = 'block';
+  setTimeout(() => t.style.display = 'none', 4000);
+}
+
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+
+// ===================== MOBILE MENU =====================
+function toggleMobileMenu() {
+  document.getElementById('mobileMenu').classList.toggle('open');
+}
+
+// ===================== NAVIGATION =====================
+function showPage(p) {
+  document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(x=>x.classList.remove('active'));
+  document.getElementById('page-'+p).classList.add('active');
+  const tabs = {home:0,startups:1,submit:2,invest:3};
+  if (tabs[p]!==undefined) document.querySelectorAll('.nav-tab')[tabs[p]]?.classList.add('active');
+  if (p==='startups') loadStartups('startups-grid', false);
+  if (p==='invest') loadStartups('invest-grid', true);
+  if (p==='admin') loadAdmin();
+  if (p==='home') loadHomeStats();
+  window.scrollTo(0,0);
+}
+
+// ===================== RENDER CARD =====================
+function cardHTML(s, withLock) {
+  const interest = Math.min(99, Math.floor(Math.random()*60)+20);
+  return `
+  <div class="startup-card" data-state="${s.state||''}" data-cat="${s.category||''}" data-name="${(s.name||'').toLowerCase()}">
+    <div class="card-header">
+      <div class="startup-avatar">${emojis[s.category]||'💡'}</div>
+      <span class="category-tag ${tagClass(s.category)}">${s.category||'Other'}</span>
+    </div>
+    <div class="card-body">
+      <div class="startup-name">${s.name||''}</div>
+      <div class="startup-hindi">${s.name_hindi||''}</div>
+      <div class="startup-desc">${(s.description||'').substring(0,120)}${s.description&&s.description.length>120?'...':''}</div>
+      <div class="card-info">
+        <div class="info-chip">📍 ${s.village||''}, ${s.state||''}</div>
+        <div class="info-chip">💰 ${s.funding_needed||'N/A'} needed</div>
+      </div>
+      <div class="funding-bar">
+        <div class="funding-label"><span>Investor Interest</span><strong>${interest}%</strong></div>
+        <div class="bar-track"><div class="bar-fill" style="width:${interest}%"></div></div>
+      </div>
+    </div>
+    <div class="card-footer">
+      <div class="founder-info">
+        <div class="founder-avatar">${initials(s.founder_name||'?')}</div>
+        <div><div class="founder-name">${s.founder_name||''}</div><div class="founder-loc">${s.state||''}</div></div>
+      </div>
+      <button class="btn-contact" onclick="openContact(${s.id},'${(s.name||'').replace(/'/g,"\\'")}')">
+        ${withLock?'🔒 Contact':'📞 Contact'}
+      </button>
+    </div>
+  </div>`;
+}
+
+// ===================== LOAD STARTUPS =====================
+async function loadStartups(gridId, withLock) {
+  const grid = document.getElementById(gridId);
+  grid.innerHTML = '<div class="loader-wrap"><div class="loader"></div></div>';
+  if (!db) {
+    grid.innerHTML = `<div class="empty-state"><div class="big">🔗</div><p>Connect Supabase database to see real startups.<br/><button class="btn-primary" style="margin-top:16px;" onclick="openSetup()">Connect Now</button></p></div>`;
+    return;
+  }
+  try {
+    const { data, error } = await db.from('startups').select('*').eq('status','approved').order('created_at',{ascending:false});
+    if (error) throw error;
+    if (!data || data.length === 0) {
+      grid.innerHTML = `<div class="empty-state"><div class="big">🌱</div><p>No approved startups yet.<br/>Be the first to submit your idea!</p></div>`;
+      return;
+    }
+    grid.innerHTML = data.map(s => cardHTML(s, withLock)).join('');
+  } catch(e) {
+    grid.innerHTML = `<div class="empty-state"><div class="big">⚠️</div><p>Error loading startups. Check your Supabase connection.</p></div>`;
+  }
+}
+
+// ===================== FILTER =====================
+function filterCards(gridId) {
+  const q = (document.getElementById('searchInput')||{}).value?.toLowerCase()||'';
+  const st = (document.getElementById('stateFilter')||{}).value||'';
+  const ct = (document.getElementById('catFilter')||{}).value||'';
+  document.querySelectorAll('#'+gridId+' .startup-card').forEach(c => {
+    const mQ = !q || c.dataset.name.includes(q);
+    const mS = !st || c.dataset.state === st;
+    const mC = !ct || c.dataset.cat === ct;
+    c.style.display = (mQ && mS && mC) ? '' : 'none';
+  });
+}
+
+// ===================== CONTACT =====================
+function openContact(id, name) {
+  currentContactStartup = { id, name };
+  document.getElementById('inv-name').value = '';
+  document.getElementById('inv-phone').value = '';
+  document.getElementById('contactModal').classList.add('show');
+}
+
+async function confirmContact() {
+  const name = document.getElementById('inv-name').value.trim();
+  const phone = document.getElementById('inv-phone').value.trim();
+  if (!name || !phone) { showToast('Please enter your name and phone number', 'error'); return; }
+  if (phone.length < 10) { showToast('Enter valid 10 digit phone number', 'error'); return; }
+  const btn = document.getElementById('confirmBtn');
+  btn.disabled = true; btn.textContent = 'Sending...';
+  if (db) {
+    try {
+      await db.from('contact_requests').insert([{
+        startup_id: currentContactStartup.id,
+        startup_name: currentContactStartup.name,
+        investor_name: name,
+        investor_phone: phone,
+        status: 'pending'
+      }]);
+    } catch(e) { console.log('Contact save error:', e); }
+  }
+  btn.disabled = false; btn.textContent = '📞 Send Request';
+  closeModal('contactModal');
+  showToast('✅ Request sent! Admin will call you within 24 hours.', 'success');
+  loadHomeStats();
+}
+
+// ===================== SUBMIT STARTUP =====================
+async function submitStartup() {
+  const name = document.getElementById('f-name').value.trim();
+  const desc = document.getElementById('f-desc').value.trim();
+  const founder = document.getElementById('f-founder').value.trim();
+  const phone = document.getElementById('f-phone').value.trim();
+  const village = document.getElementById('f-village').value.trim();
+  if (!name||!desc||!founder||!phone||!village) { showToast('Please fill all required fields (*)', 'error'); return; }
+  if (phone.length < 10) { showToast('Enter valid 10 digit phone number', 'error'); return; }
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true; btn.textContent = 'Submitting...';
+  const record = {
+    name, description: desc, category: document.getElementById('f-cat').value,
+    name_hindi: document.getElementById('f-hindi').value.trim(),
+    funding_needed: document.getElementById('f-fund').value.trim(),
+    founder_name: founder, founder_phone: phone,
+    village, state: document.getElementById('f-state').value,
+    status: 'pending'
+  };
+  if (db) {
+    try {
+      const { error } = await db.from('startups').insert([record]);
+      if (error) throw error;
+    } catch(e) {
+      showToast('Error saving. Check database connection.', 'error');
+      btn.disabled = false; btn.textContent = 'Submit My Startup Idea →';
+      return;
+    }
+  }
+  btn.disabled = false; btn.textContent = 'Submit My Startup Idea →';
+  ['f-name','f-hindi','f-desc','f-founder','f-phone','f-village'].forEach(id => document.getElementById(id).value='');
+  showToast('🎉 Submitted! Admin will review and contact you for ₹100 payment.', 'success');
+  setTimeout(()=>showPage('home'), 2500);
+}
+
+// ===================== HOME STATS =====================
+async function loadHomeStats() {
+  if (!db) return;
+  try {
+    const { data: s } = await db.from('startups').select('status');
+    const { data: c } = await db.from('contact_requests').select('id');
+    const approved = (s||[]).filter(x=>x.status==='approved').length;
+    const contacts = (c||[]).length;
+    document.getElementById('stat-startups').textContent = approved;
+    document.getElementById('stat-contacts').textContent = contacts;
+    document.getElementById('stat-revenue').textContent = '₹'+ ((approved+contacts)*100).toLocaleString('en-IN');
+  } catch(e){}
+}
+
+// ===================== INIT =====================
+loadHomeStats();
+</script>
+</body>
+</html>
